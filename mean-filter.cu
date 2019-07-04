@@ -4,9 +4,27 @@
 #include <iostream>
 #include <cuda.h>
 
+int height, width;
+
+
+//sequential code
+void meanFilter_h(int** sourceMat, int** filteredMat, int window_width){
+   for(int y = window_width/2; y < height - (window_width/2); y++){
+      for(int x = window_width/2; x < width - (window_width/2); x++){
+         int sum = 0;
+         for(int wy = y-window_width/2; wy <= y+window_width/2; wy++){
+            for(int wx = x-window_width/2; wx <= x+window_width/2; wx++){
+               sum += sourceMat[wy][wx];
+            }
+         }
+         filteredMat[y][x] = sum / (window_width*window_width);
+      }
+   }
+}
+
 int** getArrayFromBMP(FILE* fptr){
    int** imageArray;
-   int height, width, offset;
+   int offset;
    long n;
 
    fseek(fptr, 10, SEEK_SET);
@@ -29,14 +47,6 @@ int** getArrayFromBMP(FILE* fptr){
           }
       }
    }
-
-   for(int i=0; i<height; i++){
-      for(int j=0; j<width; j++){
-         printf("%d ", imageArray[i][j]);
-      }
-      printf("\n");
-   }
-
    return imageArray;
 }
 
@@ -50,10 +60,28 @@ int main(int argc,char **argv)
       printf("Error!");   
       exit(1);             
    }
-
    int** imageArray = getArrayFromBMP(fptr);
-
+   int** filterArray = getArrayFromBMP(fptr);
    fclose(fptr);
+   meanFilter_h(imageArray, filterArray, 3);
+
+   printf("input mat\n");
+   for(int i = 0; i<height; i++){
+      for(int j = 0; j<width; j++){
+         printf("%d ", imageArray[i][j]);
+      }
+      printf("\n");
+   }
+   
+   printf("output mat\n");
+   for(int i = 0; i<height; i++){
+      for(int j = 0; j<width; j++){
+         printf("%d ", filterArray[i][j]);
+      }
+      printf("\n");
+   }
+
+
    printf("end\n");
    return 0;
 }
